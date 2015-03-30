@@ -9,10 +9,12 @@
 
 const int PIXEL_PIN = 10;
 const int NUM_ACCEL_READINGS_AVG = 10;
+const int NUM_PIXELS = 7;
+const float MAX_GS = 5.0;
 
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 Adafruit_LSM303_Mag_Unified mag = Adafruit_LSM303_Mag_Unified(12345);
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(1, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_PIXELS, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 
 float maxBrightness = 1.0;
@@ -31,12 +33,10 @@ void setup()
 
   if(!mag.begin())
   {
-    //Serial.println("Ooops, no LSM303 detected ... Check your wiring!");
     while(1);
   }
   if(!accel.begin())
   {
-    //Serial.println("Ooops, no LSM303 detected ... Check your wiring!");
     while(1);
   }
   
@@ -49,25 +49,22 @@ void setup()
   }  
   strip.begin();
   strip.show(); 
-  
-  //Serial.println("DONE INITIALIZING!");
 }
 
 void loop() 
 {
-    compassAccelerometerMode();  
+   compassAccelerometerMode();  
 
   delay(100);
   
 }
-
-
 
 // Brightness is determined by accelerometer delta, color is
 // determined my compass heading
 void compassAccelerometerMode() 
 {
   float heading = getCompassHeading();
+  if(heading > 0.0) {
   float accelDeltas[3];
   getAccelerometerData(accelDeltas);
   
@@ -79,13 +76,17 @@ void compassAccelerometerMode()
       maxDelta = accelDeltas[i];
     }
   }
+  Serial.print("Accel Delta: "); Serial.println(maxDelta);
   float brightness = getBrightness(maxDelta);
-  
+
   int colors[3];
   getColors(getCompassHeading(), colors);
-  
-  strip.setPixelColor(0, colors[0]*brightness, colors[1]*brightness, colors[2]*brightness);
+
+  for (int i=0; i < NUM_PIXELS; i++) {
+      strip.setPixelColor(i, colors[0]*brightness, colors[1]*brightness, colors[2]*brightness);
+  }
   strip.show();
+  }
   
 }
 
@@ -101,7 +102,7 @@ float getCompassHeading()
   {
     heading = 360 + heading;
   }
-  
+
   Serial.print("Compass heading: "); Serial.println(heading); 
   return heading;
 }
@@ -117,9 +118,10 @@ void flashPixel(int r, int g, int b)
 
 float getBrightness(float delta) 
 {  
-  float brightness = delta / 10.0;
-  brightness = min(brightness, 100.0);
-  return brightness; 
+  // 5gs is the "max" force we will measure.
+  
+  float brightness = min(abs(delta - 1.0), MAX_GS);
+  return brightness / MAX_GS; 
 }
 
 void getAccelerometerData(float deltas[])
@@ -153,9 +155,12 @@ void getAccelerometerData(float deltas[])
   readingsZ[curIdx] = zAccel;
   
   curIdx++;
-  if (curIdx >= NUM_ACCEL_READINGS_AVG)
+  if (curIdx >= NUM_ACCEL_READINGS_AVG) {
     curIdx = 0;
+  }
 }
+
+
 
 void getColors(int WheelPos, int colors[])
 {
@@ -167,14 +172,14 @@ void getColors(int WheelPos, int colors[])
       colors[2] = 0;                  //blue off
       break; 
     case 1:
-      colors[0] = (127 - WheelPos % 128)*2*maxBrightness;  //green down
-      colors[1] = (WheelPos % 128)*2*maxBrightness;      //blue up
-      colors[2] = 0;                  //red off
+      colors[1] = (127 - WheelPos % 128)*2*maxBrightness;  //green down
+      colors[2] = (WheelPos % 128)*2*maxBrightness;      //blue up
+      colors[0] = 0;                  //red off
       break; 
     case 2:
-      colors[0] = (127 - WheelPos % 128)*2*maxBrightness;  //blue down 
-      colors[1] = WheelPos % 128*2*maxBrightness;      //red up
-      colors[2] = 0;                  //green off
+      colors[2] = (127 - WheelPos % 128)*2*maxBrightness;  //blue down 
+      colors[0] = WheelPos % 128*2*maxBrightness;      //red up
+      colors[1] = 0;                  //green off
       break; 
   }
 
