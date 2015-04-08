@@ -1,0 +1,6 @@
+Light              KEYWORD1
+Accelerometer      KEYWORD2
+setBrightness      KEYWORD3
+setColor           KEYWORD4
+getCompassReading  KEYWORD5
+getMotionReading   KEYWORD6
