@@ -1,4 +1,4 @@
-/** Flash the first pixel red, green and blue.
+/** Turn on one blue pixel at position '0'
  *
  * This demonstrates the pixel strip definition, the setup and main loop
  * code for the FLORA and a NeoPixel ring.
