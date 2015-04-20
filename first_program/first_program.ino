@@ -22,6 +22,16 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(
 );
 
 /*
+ * This function is called when the FLORA "boots up" and is
+ * responsible for initializing the hardware, setting any globals
+ * and getting ready to run.
+ */
+void setup() {
+	pixels.begin();
+	pixels.setBrightness(50);
+}
+
+/*
  * This function is called continuously once the FLORA is running.
  * It doesn't need to ever return, but if it does it will be called
  * again.
@@ -68,14 +78,5 @@ uint32_t Wheel(byte WheelPos) {
 	}
 }
 
-/*
- * This function is called when the FLORA "boots up" and is
- * responsible for initializing the hardware, setting any globals
- * and getting ready to run.
- */
-void setup() {
-	pixels.begin();
-	pixels.setBrightness(50);
-}
 
 
